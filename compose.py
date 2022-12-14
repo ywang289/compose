@@ -54,6 +54,38 @@ def home():
 
     return json.dumps(json_list)
 
+# 1. customer purchase
+# for each db:
+# Sellers → check remaining amount for each purchased merchandise; if all are ok, then update for each; if one is not enough, return warning message
+# if success:
+# Customers → insert to orders; insert to places; return oid
+# if oid:
+# Purchases → insert to orders; insert to contains (for each purchased merchandise) 
+
+@app.route('/customer/purchase', methods=['POST'])
+def customer_purchase():
+    if request.method == 'POST':
+        data = json.loads(request.get_data())
+        email = data['email']
+        time=data['timestamp']
+        items= data["items"]
+        sellers_check = requests.post('http://127.0.0.1:8081/order/check_amount', data=request.get_data())
+        #{response: success or fail}
+        # print(json.loads(sellers_check.text)['state'])
+        # print(json.loads(sellers_check.text)['message'])
+        if json.loads(sellers_check.text)['state']:
+            # success
+            #{email: string, timestamp: time,( current time),items:dictionary{merchandise id: amount}}
+            print("success")
+            s= json.dumps({'email':email, 'timestamp':time, 'items':items})
+            get_oid = requests.post('http://127.0.0.1:8080/customer/place_order', data=s)
+            # true/ false
+            oid = json.loads(get_oid.text)['oid']
+            if json.loads(get_oid.text)['state']:
+                # { "email":"test3@gmail.com", "timestamp":"2022-12-14 17:30:00" ,"order":{"1":"10", "10":"2"}, "oid":"4"}
+                s= json.dumps({'email':email, 'timestamp':time, 'items':items, "oid": oid})
+                insert_item= requests.post('http://127.0.0.1:8082/order/place_order', data=s)
+    return insert_item.text
 
 @app.route('/search', methods=['POST'])
 def seaerch():
@@ -80,24 +112,45 @@ def seaerch():
     
 
         return json.dumps(json_list)
-  
-    
+
+# 2. seller insert merchandise
+# from frontend to backend:
+# 	{email, name, price, remaining_amount, description, picture}
+# for each db:
+# /seller/insert_item
+# Sellers → insert to merchandises and provides; return mid
+
+# if mid:
+# 	/order/add_merchandise
+# Purchases → insert id to merchandise
+
+#  {"email": "test@gmail.com", "name":"test2", "price": 10, "remaining_amount":100, "description": "bbb", "picture": "aaaa"}
+@app.route('/seller/insert_merchandise', methods=['POST'])
+def insert_merchandise():
+    if request.method == 'POST':
+        data = json.loads(request.get_data())
+        email = data['email']
+        name= data["name"]
+        price= data["price"]
+        remaining_amount= data['remaining_amount']
+        description= data["description"]
+        picture= data['picture']
+        sellers_insert= requests.post('http://127.0.0.1:8081/seller/insert_item', data=request.get_data())
+        
+        if json.loads(sellers_insert.text)['state']:
+            # success
+            mid = json.loads(sellers_insert.text)['mid']
+            #{email: string, timestamp: time,( current time),items:dictionary{merchandise id: amount}}
+            print("success")
+            s= json.dumps({'mid':mid})
+            insert_order = requests.post('http://127.0.0.1:8082//order/add_merchandise', data=s)
+            # true/ false
+            print("second")
+    return insert_order.text   
         
 
 if __name__=='__main__':
     app.run(host='0.0.0.0', port=8084, debug=True)
 
-# x = requests.get('http://ec2-34-201-131-112.compute-1.amazonaws.com:8080/')
-# print(x.content)
-# print(x.status_code)
-
-
-
-# if __name__ == "__main__":
-#     import time
-#     s = time.perf_counter()
-#     asyncio.run(main())
-#     elapsed = time.perf_counter() - s
-#     print(f"{__file__} executed in {elapsed:0.2f} seconds.")
 
     
