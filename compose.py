@@ -32,11 +32,7 @@ app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://admin:zy112612@e6156-1.cu
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']=True
 db=SQLAlchemy(app)
 
-#测试连上
-with app.app_context():
-    sql = 'select * from Contains'
-    result = db.session.execute(sql)
-    print(result.fetchall())
+
 
 
 @app.route('/', methods=['GET'])
@@ -53,6 +49,7 @@ def home():
     
 
     return json.dumps(json_list)
+
 
 # 1. customer purchase
 # for each db:
