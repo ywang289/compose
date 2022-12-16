@@ -69,6 +69,7 @@ def customer_purchase():
         email = data['email']
         time=data['timestamp']
         items= data["items"]
+        
         sellers_check = requests.post('http://127.0.0.1:8081/order/check_amount', data=request.get_data())
         #{response: success or fail}
         # print(json.loads(sellers_check.text)['state'])
@@ -78,10 +79,12 @@ def customer_purchase():
             #{email: string, timestamp: time,( current time),items:dictionary{merchandise id: amount}}
             print("success")
             s= json.dumps({'email':email, 'timestamp':time, 'items':items})
+            
             get_oid = requests.post('http://127.0.0.1:8080/customer/place_order', data=s)
             # true/ false
             oid = json.loads(get_oid.text)['oid']
             if json.loads(get_oid.text)['state']:
+                print("successfully")
                 # { "email":"test3@gmail.com", "timestamp":"2022-12-14 17:30:00" ,"order":{"1":"10", "10":"2"}, "oid":"4"}
                 s= json.dumps({'email':email, 'timestamp':time, 'items':items, "oid": oid})
                 insert_item= requests.post('http://127.0.0.1:8082/order/place_order', data=s)
