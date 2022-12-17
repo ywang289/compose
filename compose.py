@@ -147,6 +147,19 @@ def insert_merchandise():
             # true/ false
             print("second")
     return insert_order.text   
+
+#{"oid":"24"}
+@app.route('/compose/order_details', methods=['POST'])
+def order_detail():
+    if request.method == 'POST':
+        
+        order_detail = requests.post('http://127.0.0.1:8082/customer/order_details', data=request.get_data())
+        order=json.loads(order_detail.text)
+        compose_detail= requests.post('http://127.0.0.1:8081/mid/get_name', data=json.dumps(order))
+
+        return json.loads(compose_detail.text)
+        
+
         
 
 if __name__=='__main__':
