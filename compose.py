@@ -36,23 +36,17 @@ customer_http="http://ec2-44-201-86-144.compute-1.amazonaws.com:8080/"
 seller_http="http://ec2-52-55-10-164.compute-1.amazonaws.com:8081/"
 order_http="http://ec2-3-84-2-51.compute-1.amazonaws.com:8082/"
 
+# customer_http="http://127.0.0.1:8080/"
+# seller_http="http://127.0.0.1:8081/"
+# order_http="http://127.0.0.1:8082/"
 
 
+with app.app_context():
+   print("a")
 
 @app.route('/', methods=['GET'])
 def home():
-    x = requests.get('http://ec2-34-201-131-112.compute-1.amazonaws.com:8080/')
-    y= requests.get('http://127.0.0.1:8081')
-
-    json_list=[]
-    print(x.text)
-    print(y.text)
-
-    json_list.append(x.text)
-    json_list.append(y.text)
-    
-
-    return json.dumps(json_list)
+    return "hello world"
 
 
 # 1. customer purchase
@@ -119,26 +113,33 @@ def insert_merchandise():
         
         if json.loads(sellers_insert.text)['state']:
             # success
+            print(json.loads(sellers_insert.text))
             mid = json.loads(sellers_insert.text)['mid']
+           
             #{email: string, timestamp: time,( current time),items:dictionary{merchandise id: amount}}
             print("success")
-            s= json.dumps({'mid':mid})
+            s= json.dumps({'mid':mid, "name": name})
+            print ({'mid':mid, "name": name})
             insert_order = requests.post(order_http+'order/add_merchandise', data=s)
+            
             # true/ false
             print("second")
     return insert_order.text   
 
-#{"oid":"24"}
-@app.route('/compose/order_details', methods=['POST'])
+#{email, name, price, remaining_amount, description, picture, mid}
+@app.route('/compose/update_merchandise', methods=['POST'])
 def order_detail():
     if request.method == 'POST':
         
-        order_detail = requests.post(order_http+'customer/order_details', data=request.get_data())
+        order_detail = requests.post(seller_http+'seller/update_item', data=request.get_data())
         order=json.loads(order_detail.text)
-        compose_detail= requests.post(seller_http+'mid/get_name', data=json.dumps(order))
+    # if can not search order, need to add something
+        compose_detail= requests.post(order_http+'/order/update_merchandise', data=request.get_data())
 
         return json.loads(compose_detail.text)
         
+
+
 
         
 
