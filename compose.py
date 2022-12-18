@@ -32,6 +32,10 @@ app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://admin:zy112612@e6156-1.cu
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']=True
 db=SQLAlchemy(app)
 
+customer_http="http://ec2-44-201-86-144.compute-1.amazonaws.com:8080/"
+seller_http="http://ec2-52-55-10-164.compute-1.amazonaws.com:8081/"
+order_http="http://ec2-3-84-2-51.compute-1.amazonaws.com:8082/"
+
 
 
 
@@ -59,6 +63,7 @@ def home():
 # if oid:
 # Purchases → insert to orders; insert to contains (for each purchased merchandise) 
 
+#{"email":"wg@gmail.com", "timestamp":"2022-12-11 17:30:00","items":[{"mid":"1","amount":"1"}, {"mid":"10","amount":"2"}]}
 @app.route('/customer/purchase', methods=['POST'])
 def customer_purchase():
     if request.method == 'POST':
@@ -67,7 +72,7 @@ def customer_purchase():
         time=data['timestamp']
         items= data["items"]
         
-        sellers_check = requests.post('http://127.0.0.1:8081/order/check_amount', data=request.get_data())
+        sellers_check = requests.post(seller_http+'order/check_amount', data=request.get_data())
         #{response: success or fail}
         # print(json.loads(sellers_check.text)['state'])
         # print(json.loads(sellers_check.text)['message'])
@@ -77,41 +82,16 @@ def customer_purchase():
             print("success")
             s= json.dumps({'email':email, 'timestamp':time, 'items':items})
             
-            get_oid = requests.post('http://127.0.0.1:8080/customer/place_order', data=s)
+            get_oid = requests.post(customer_http+'customer/place_order', data=s)
             # true/ false
             oid = json.loads(get_oid.text)['oid']
             if json.loads(get_oid.text)['state']:
                 print("successfully")
                 # { "email":"test3@gmail.com", "timestamp":"2022-12-14 17:30:00" ,"order":{"1":"10", "10":"2"}, "oid":"4"}
                 s= json.dumps({'email':email, 'timestamp':time, 'items':items, "oid": oid})
-                insert_item= requests.post('http://127.0.0.1:8082/order/place_order', data=s)
+                insert_item= requests.post(order_http+'order/place_order', data=s)
     return insert_item.text
 
-@app.route('/search', methods=['POST'])
-def seaerch():
-    # x = requests.get('http://ec2-34-201-131-112.compute-1.amazonaws.com:8080/')
-    # y= requests.get('http://127.0.0.1:8081')
-    json_list=[]
-    if request.method == 'POST':
-        data = json.loads(request.get_data())
-        get_email = data['email']
-        print(get_email)
-        d={'email': get_email}
-        # change answer to databse 
-        s=json.dumps(d)
-        seller_search= requests.post('http://127.0.0.1:8081/people', data=s)
-        customer_search= requests.post("http://127.0.0.1:8080/people", data=s)
-        
-        
-        print(seller_search.text)
-        # print(customer_search.text)
-
-        json_list.append(seller_search.text)
-        json_list.append(customer_search.text)
-        # json_list.append(customer_search.text)
-    
-
-        return json.dumps(json_list)
 
 # 2. seller insert merchandise
 # from frontend to backend:
@@ -135,7 +115,7 @@ def insert_merchandise():
         remaining_amount= data['remaining_amount']
         description= data["description"]
         picture= data['picture']
-        sellers_insert= requests.post('http://127.0.0.1:8081/seller/insert_item', data=request.get_data())
+        sellers_insert= requests.post(seller_http+'seller/insert_item', data=request.get_data())
         
         if json.loads(sellers_insert.text)['state']:
             # success
@@ -143,7 +123,7 @@ def insert_merchandise():
             #{email: string, timestamp: time,( current time),items:dictionary{merchandise id: amount}}
             print("success")
             s= json.dumps({'mid':mid})
-            insert_order = requests.post('http://127.0.0.1:8082//order/add_merchandise', data=s)
+            insert_order = requests.post(order_http+'order/add_merchandise', data=s)
             # true/ false
             print("second")
     return insert_order.text   
@@ -153,9 +133,9 @@ def insert_merchandise():
 def order_detail():
     if request.method == 'POST':
         
-        order_detail = requests.post('http://127.0.0.1:8082/customer/order_details', data=request.get_data())
+        order_detail = requests.post(order_http+'customer/order_details', data=request.get_data())
         order=json.loads(order_detail.text)
-        compose_detail= requests.post('http://127.0.0.1:8081/mid/get_name', data=json.dumps(order))
+        compose_detail= requests.post(seller_http+'mid/get_name', data=json.dumps(order))
 
         return json.loads(compose_detail.text)
         
