@@ -34,7 +34,7 @@ db=SQLAlchemy(app)
 
 customer_http="http://ec2-44-201-86-144.compute-1.amazonaws.com:8080/"
 seller_http="http://ec2-52-55-10-164.compute-1.amazonaws.com:8081/"
-order_http="http://ec2-3-84-2-51.compute-1.amazonaws.com:8082/"
+order_http="http://order-env.eba-nqc9rr5s.us-east-1.elasticbeanstalk.com/"
 
 # customer_http="http://127.0.0.1:8080/"
 # seller_http="http://127.0.0.1:8081/"
